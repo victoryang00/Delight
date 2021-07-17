@@ -1,0 +1,10 @@
+[package]
+name = "delight"
+version = "0.1.0"
+authors = ["victoryang00 <yangyiwei2000@gmail.com>"]
+
+[dependencies]
+minstant = { git = "https://github.com/tikv/minstant.git", branch = "master" }
+ckb-vm = { git = "https://github.com/nervosnetwork/ckb-vm.git", branch = "develop" }
+rand = "0.8.4"
+bytes = "1.0.1"
