@@ -8,6 +8,6 @@ authors = ["victoryang00 <yangyiwei2000@gmail.com>"]
 
 [dependencies]
 minstant = { git = "https://github.com/tikv/minstant.git", branch = "master" }
-ckb-vm = {path = "../../ckb-vm"}
+ckb-vm = {git = "https://github.com/nervosnetwork/ckb-vm.git", branch = "develop",features =["asm"]}
 rand = "0.8.4"
 bytes = "1.0.1"

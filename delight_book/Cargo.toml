@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["victoryang00 <yangyiwei2000@gmail.com>"]
 
 [dependencies]
-libc ="^0"
+libc = "^0"
 
 [profile.dev]
 panic = "abort"
