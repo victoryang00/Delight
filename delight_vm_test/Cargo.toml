@@ -1,0 +1,13 @@
+[package]
+name = "delight_vm_test"
+version = "0.1.0"
+edition = "2018"
+authors = ["victoryang00 <yangyiwei2000@gmail.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+minstant = { git = "https://github.com/tikv/minstant.git", branch = "master" }
+ckb-vm = {path = "../../ckb-vm"}
+rand = "0.8.4"
+bytes = "1.0.1"

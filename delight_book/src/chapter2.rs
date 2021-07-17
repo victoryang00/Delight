@@ -1,10 +1,10 @@
-use std::ops::{Add, BitAnd, BitOr, BitOrAssign, Not, Shl, ShlAssign, Shr, ShrAssign, Sub};
+use core::ops::{Add, BitAnd, BitOr, BitOrAssign, Not, Shl, ShlAssign, Shr, ShrAssign, Sub};
 
-use std::hash::{Hash, Hasher};
+use core::hash::{Hash, Hasher};
 
-use std::cmp::{Ord, Ordering, PartialOrd};
+use core::cmp::{Ord, Ordering, PartialOrd};
 
-use std::fmt::{Binary, Display, Formatter, LowerHex, Octal, UpperHex};
+use core::fmt::{Binary, Display, Formatter, LowerHex, Octal, UpperHex};
 
 /// modified from https://docs.rs/ux/0.0.1/src/ux/lib.rs.html#63
 
@@ -112,31 +112,31 @@ macro_rules! implement_common {
 
         // Implement formatting functions
         impl Display for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), core::fmt::Error> {
                 let &$name(ref value) = self;
                 <$type as Display>::fmt(value, f)
             }
         }
         impl UpperHex for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), core::fmt::Error> {
                 let &$name(ref value) = self;
                 <$type as UpperHex>::fmt(value, f)
             }
         }
         impl LowerHex for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), core::fmt::Error> {
                 let &$name(ref value) = self;
                 <$type as LowerHex>::fmt(value, f)
             }
         }
         impl Octal for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), core::fmt::Error> {
                 let &$name(ref value) = self;
                 <$type as Octal>::fmt(value, f)
             }
         }
         impl Binary for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), core::fmt::Error> {
                 let &$name(ref value) = self;
                 <$type as Binary>::fmt(value, f)
             }
@@ -397,24 +397,23 @@ pub fn basics_trailing_1(x: c8) -> c8 {
 pub fn basics_isolate_1(x: c8) -> c8 {
     x & (c8(0) - x)
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_basics() {
-        assert_eq!(basics_get_and(c8(0b01011000)), c8(0b001010000));
-        assert_eq!(basics_get_or(c8(0b10100111)), c8(0b10101111));
-        assert_eq!(basics_all_right_1_to_0(c8(0b10100111)), c8(0b10100000));
-        assert_eq!(basics_all_right_0_to_1(c8(0b10101000)), c8(0b10101111));
-        assert_eq!(basics_single_0_right_0(c8(0b10100111)), c8(0b00001000));
-        assert_eq!(basics_single_0_right_1(c8(0b10101000)), c8(0b11110111));
-        assert_eq!(basics_trailing_0_1(c8(0b01011000)), c8(0b00000111));
-        assert_eq!(basics_trailing_0_2(c8(0b01011000)), c8(0b00000111));
-        assert_eq!(basics_trailing_0_3(c8(0b01011000)), c8(0b00000111));
-        assert_eq!(basics_trailing_1(c8(0b10100111)), c8(0b11111000));
-        assert_eq!(basics_isolate_1(c8(0b01011000)), c8(0b00001000));
-    }
+/// create a word with 1’s at the positions of the rightmost 1-bit and the trailing 0’s in x, producing all 1’s if no 1-bit, and the integer 1 if no trailing 0’s
+pub fn basics_get_rightmost_trailing_1(x: c8) -> i16 {
+    x.mask().0 >> (x - c8(1)).mask().0
+}
 
-    #[test]
-    fn test_vm_result() {}
+#[test_case]
+fn test_basics() {
+    assert_eq!(basics_get_and(c8(0b01011000)), c8(0b001010000));
+    assert_eq!(basics_get_or(c8(0b10100111)), c8(0b10101111));
+    assert_eq!(basics_all_right_1_to_0(c8(0b10100111)), c8(0b10100000));
+    assert_eq!(basics_all_right_0_to_1(c8(0b10101000)), c8(0b10101111));
+    assert_eq!(basics_single_0_right_0(c8(0b10100111)), c8(0b00001000));
+    assert_eq!(basics_single_0_right_1(c8(0b10101000)), c8(0b11110111));
+    assert_eq!(basics_trailing_0_1(c8(0b01011000)), c8(0b00000111));
+    assert_eq!(basics_trailing_0_2(c8(0b01011000)), c8(0b00000111));
+    assert_eq!(basics_trailing_0_3(c8(0b01011000)), c8(0b00000111));
+    assert_eq!(basics_trailing_1(c8(0b10100111)), c8(0b11111000));
+    assert_eq!(basics_isolate_1(c8(0b01011000)), c8(0b00001000));
+    assert_eq!(basics_get_rightmost_trailing_1(c8(0b01011000)), 0b00001111);
 }
