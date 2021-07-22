@@ -11,3 +11,7 @@ minstant = { git = "https://github.com/tikv/minstant.git", branch = "master" }
 ckb-vm = {git = "https://github.com/nervosnetwork/ckb-vm.git", branch = "develop",features =["asm"]}
 rand = "0.8.4"
 bytes = "1.0.1"
+clap = "2.33"
+memmap = "0.7"
+object = "0.20"
+addr2line = "0.13.0"
