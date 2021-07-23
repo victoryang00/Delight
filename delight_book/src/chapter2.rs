@@ -140,9 +140,9 @@ fn test_basics1() {
 }
 
 /// If division is slow but you have a fast way to compute the number of trailing
-/// zeros function ntz(x), the number of leading zeros function nlz(x), or population
-/// count (pop(x) is the number of 1-bits in x)
-pub fn ntz(mut x: u32) -> u32 {
+/// zeros function basics_ntz(x), the number of leading zeros function basics_nlz(x), or basics_population
+/// count (basics_pop(x) is the number of 1-bits in x)
+pub fn basics_ntz(mut x: u32) -> u32 {
     if x == 0 { return 32; }
     let mut n = 1;
     if (x & 0x0000FFFF) == 0 {
@@ -164,7 +164,7 @@ pub fn ntz(mut x: u32) -> u32 {
     n - (x & 1)
 }
 
-pub fn nlz(mut x: u32) -> u32 {
+pub fn basics_nlz(mut x: u32) -> u32 {
     if x == 0 { return 32; }
     let mut n = 0;
     if x <= 0x0000FFFF {
@@ -187,7 +187,7 @@ pub fn nlz(mut x: u32) -> u32 {
     return n;
 }
 
-pub fn pop(mut x: u32) -> u32 {
+pub fn basics_pop(mut x: u32) -> u32 {
     x = x - ((x >> 1) & 0x55555555);
     x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
     x = (x + (x >> 4)) & 0x0F0F0F0F;
@@ -197,70 +197,70 @@ pub fn pop(mut x: u32) -> u32 {
 }
 
 
-pub fn ntz1(mut x: u32) -> u32 {
-    return 32 - nlz(!x & (x - 1));
+pub fn basics_ntz1(mut x: u32) -> u32 {
+    return 32 - basics_nlz(!x & (x - 1));
 }
 
-pub fn ntz2(mut x: u32) -> u32 {
-    return pop(!x & (x - 1));
+pub fn basics_ntz2(mut x: u32) -> u32 {
+    return basics_pop(!x & (x - 1));
 }
 
-pub fn ntz3(mut x: u32) -> u32 {
+pub fn basics_ntz3(mut x: u32) -> u32 {
     let mut n;
 
-    if (x == 0) { return (32); }
+    if x == 0 { return 32; }
     n = 1;
-    if ((x & 0x0000FFFF) == 0) {
+    if (x & 0x0000FFFF) == 0 {
         n = n + 16;
         x = x >> 16;
     }
-    if ((x & 0x000000FF) == 0) {
+    if (x & 0x000000FF) == 0 {
         n = n + 8;
         x = x >> 8;
     }
-    if ((x & 0x0000000F) == 0) {
+    if (x & 0x0000000F) == 0 {
         n = n + 4;
         x = x >> 4;
     }
-    if ((x & 0x00000003) == 0) {
+    if (x & 0x00000003) == 0 {
         n = n + 2;
         x = x >> 2;
     }
     return n - (x & 1);
 }
 
-pub fn ntz4(mut x: u32) -> u32 {
+pub fn basics_ntz4(mut x: u32) -> u32 {
     let mut y = 0;
     let mut n = 0;
 
-    if (x == 0) { return 32; }
+    if x == 0 { return 32; }
     n = 31;
     y = x << 16;
-    if (y != 0) {
+    if y != 0 {
         n = n - 16;
         x = y;
     }
     y = x << 8;
-    if (y != 0) {
+    if y != 0 {
         n = n - 8;
         x = y;
     }
     y = x << 4;
-    if (y != 0) {
+    if y != 0 {
         n = n - 4;
         x = y;
     }
     y = x << 2;
-    if (y != 0) {
+    if y != 0 {
         n = n - 2;
         x = y;
     }
     y = x << 1;
-    if (y != 0) { n = n - 1; }
+    if y != 0 { n = n - 1; }
     return n;
 }
 
-pub fn ntz4a(mut x: u32) -> u32 {
+pub fn basics_ntz4a(mut x: u32) -> u32 {
     let mut y;
     let mut n;
 
@@ -290,29 +290,29 @@ pub fn ntz4a(mut x: u32) -> u32 {
     return n;
 }
 
-pub fn ntz5(mut x: u32) -> u32 {
-    if (x & 15 > 0) {
-        if (x & 3 > 0) {
-            if (x & 1 > 0) { return 0; } else { return 1; }
-        } else if (x & 4 > 0) { return 2; } else { return 3; }
-    } else if (x & 0x30 > 0) {
-        if (x & 0x10 > 0) { return 4; } else { return 5; }
-    } else if (x & 0x40 > 0) { return 6; } else if (x > 0) { return 7; } else { return 8; }
+pub fn basics_ntz5(mut x: u32) -> u32 {
+    if x & 15 > 0 {
+        if x & 3 > 0 {
+            if x & 1 > 0 { return 0; } else { return 1; }
+        } else if x & 4 > 0 { return 2; } else { return 3; }
+    } else if x & 0x30 > 0 {
+        if x & 0x10 > 0 { return 4; } else { return 5; }
+    } else if x & 0x40 > 0 { return 6; } else if x > 0 { return 7; } else { return 8; }
 }
 
-pub fn ntz6(mut x: u32) -> u32 {
+pub fn basics_ntz6(mut x: u32) -> u32 {
     let mut n;
 
     x = !x & (x - 1);
     n = 0;                       // n = 32;
-    while (x != 0) {              // while (x != 0) {
+    while x != 0 {              // while (x != 0) {
         n = n + 1;                //    n = n - 1;
         x = x >> 1;               //    x = x + x;
     }                            // }
     return n;                    // return n;
 }
 
-pub fn ntz6a(mut x: u32) -> u32 {
+pub fn basics_ntz6a(mut x: u32) -> u32 {
     let mut n;
 
     n = 32;
@@ -338,7 +338,7 @@ execute in only 10 cycles on a machine with sufficient parallelism.
    The first two uses of y can instead be x, which would increase the
 useful parallelism on most machines (the assignments to y, bz, and b4
 could then all run in parallel). */
-pub fn ntz7(mut x: i32) -> i32 {
+pub fn basics_ntz7(mut x: i32) -> i32 {
     let y;
     let bz;
     let b4;
@@ -361,7 +361,7 @@ pub fn ntz7(mut x: i32) -> i32 {
 http://www.ciphersbyritter.com/NEWS4/BITCT.HTM Table
 entries marked "u" are unused. 6 ops including a
 multiply, plus an indexed load. */
-pub fn ntz8(mut x: i32) -> i32 {
+pub fn basics_ntz8(mut x: i32) -> i32 {
     let table =
         vec![32, 0, 1, 12, 2, 6, 99, 13, 3, 99, 7, 99, 99, 99, 99, 14,
              10, 4, 99, 99, 8, 99, 99, 25, 99, 99, 99, 99, 99, 21, 27, 15,
@@ -374,7 +374,7 @@ pub fn ntz8(mut x: i32) -> i32 {
 
 /* Seal's algorithm with multiply expanded.
 9 elementary ops plus an indexed load. */
-pub fn ntz8a(mut x: i32) -> i32 {
+pub fn basics_ntz8a(mut x: i32) -> i32 {
     let table =
         vec![32, 0, 1, 12, 2, 6, 99, 13, 3, 99, 7, 99, 99, 99, 99, 14,
              10, 4, 99, 99, 8, 99, 99, 25, 99, 99, 99, 99, 99, 21, 27, 15,
@@ -390,7 +390,7 @@ pub fn ntz8a(mut x: i32) -> i32 {
 
 /* Reiser's algorithm. Three ops including a "remainder,"
 plus an indexed load. */
-pub fn ntz9(mut x: i32) -> i32 {
+pub fn basics_ntz9(mut x: i32) -> i32 {
     let table = vec![32, 0, 1, 26, 2, 23, 27,
                      99, 3, 16, 24, 30, 28, 11, 99, 13, 4,
                      7, 17, 99, 25, 22, 31, 15, 29, 10, 12,
@@ -405,7 +405,7 @@ table. The de Bruijn sequence used here is
                 0000 0100 1101 0111 0110 0101 0001 1111,
 obtained from Danny Dube's October 3, 1997, posting in
 comp.compression.research. Thanks to Norbert Juffa for this reference. */
-pub fn ntz10(mut x: i32) -> i32 {
+pub fn basics_ntz10(mut x: i32) -> i32 {
     let table =
         vec![0, 1, 2, 24, 3, 19, 6, 25, 22, 4, 20, 10, 16, 7, 12, 26,
              31, 23, 18, 5, 21, 9, 15, 11, 30, 17, 8, 14, 29, 13, 28, 27];
@@ -416,7 +416,7 @@ pub fn ntz10(mut x: i32) -> i32 {
 }
 
 /* Norbert Juffa's code, answer to exercise 1 of Chapter 5 (2nd ed). */
-pub fn ntz11(mut n: i32) -> i32 {
+pub fn basics_ntz11(mut n: i32) -> i32 {
     let tab =
         vec![0, 1, 2, 24, 3, 19, 6, 25,
              22, 4, 20, 10, 16, 7, 12, 26,
@@ -438,34 +438,34 @@ pub fn ntz11(mut n: i32) -> i32 {
 
 #[test]
 fn test_basics2() {
-    assert_eq!(ntz(12), 2);
-    assert_eq!(ntz1(12), 2);
-    assert_eq!(ntz2(12), 2);
-    assert_eq!(ntz3(12), 2);
-    assert_eq!(ntz4(12), 2);
-    assert_eq!(ntz5(12), 2);
-    assert_eq!(ntz6(12), 2);
-    assert_eq!(ntz7(12), 2);
-    assert_eq!(ntz8(12), 2);
-    assert_eq!(ntz9(12), 2);
-    assert_eq!(ntz10(12), 2);
-    assert_eq!(ntz11(12), 2);
-    // assert_eq!(ntz(12), 2);
+    assert_eq!(basics_ntz(12), 2);
+    assert_eq!(basics_ntz1(12), 2);
+    assert_eq!(basics_ntz2(12), 2);
+    assert_eq!(basics_ntz3(12), 2);
+    assert_eq!(basics_ntz4(12), 2);
+    assert_eq!(basics_ntz5(12), 2);
+    assert_eq!(basics_ntz6(12), 2);
+    assert_eq!(basics_ntz7(12), 2);
+    assert_eq!(basics_ntz8(12), 2);
+    assert_eq!(basics_ntz9(12), 2);
+    assert_eq!(basics_ntz10(12), 2);
+    assert_eq!(basics_ntz11(12), 2);
+    // assert_eq!(basics_ntz(12), 2);
 
-    assert_eq!(ntz(123), 0);
-    assert_eq!(ntz(21), 0);
-    assert_eq!(nlz(21), 27);
-    assert_eq!(nlz(123), 25);
-    assert_eq!(nlz(13), 28);
-    assert_eq!(pop(13), 3);
-    assert_eq!(pop(3), 2);
-    assert_eq!(pop(34), 2);
+    assert_eq!(basics_ntz(123), 0);
+    assert_eq!(basics_ntz(21), 0);
+    assert_eq!(basics_nlz(21), 27);
+    assert_eq!(basics_nlz(123), 25);
+    assert_eq!(basics_nlz(13), 28);
+    assert_eq!(basics_pop(13), 3);
+    assert_eq!(basics_pop(3), 2);
+    assert_eq!(basics_pop(34), 2);
 }
 
 /// Given a word x that represents a subset, the idea is to find the rightmost
 /// contiguous group of 1’s in x and the following 0’s, and “increment” that quantity to the
 /// next value that has the same number of 1’s.
-pub fn snoob(mut x: i32) -> i32 {
+pub fn basics_snoob(mut x: i32) -> i32 {
     let mut smallest = 0;
     let mut ripple = 0;
     let mut ones = 0;
@@ -477,7 +477,7 @@ pub fn snoob(mut x: i32) -> i32 {
     return ripple | ones;        //     xxx1 0000 0111
 }
 
-pub fn snoob1(mut x: i32) -> i32 {
+pub fn basics_snoob1(mut x: i32) -> i32 {
     let mut smallest = 0;
     let mut ripple = 0;
     let mut ones = 0;
@@ -485,25 +485,24 @@ pub fn snoob1(mut x: i32) -> i32 {
     smallest = x & -x;           //     0000 0001 0000
     ripple = x + smallest;       //     xxx1 0000 0000
     ones = x ^ ripple;           //     0001 1111 0000
-    ones = ones >> (2 + ntz(x as u32) as i32); //     0000 0000 0111
+    ones = ones >> (2 + basics_ntz(x as u32) as i32); //     0000 0000 0111
     return ripple | ones;        //     xxx1 0000 0111
 }
 
-/* Variation 2: nlz to avoid division.  Nine ops. */
-pub fn snoob2(mut x: i32) -> i32 {
+/* Variation 2: basics_nlz to avoid division.  Nine ops. */
+pub fn basics_snoob2(mut x: i32) -> i32 {
     let mut smallest = 0;
     let mut ripple = 0;
-    let mut ones = 0;
-// x = xxx0 1111 0000
+    let mut ones = 0;       // x = xxx0 1111 0000
     smallest = x & -x;           //     0000 0001 0000
     ripple = x + smallest;       //     xxx1 0000 0000
     ones = x ^ ripple;           //     0001 1111 0000
-    ones = ones >> (33 - nlz(smallest as u32)); // 0000 0000 0111
+    ones = ones >> (33 - basics_nlz(smallest as u32)); // 0000 0000 0111
     return ripple | ones;        //     xxx1 0000 0111
 }
 
-/* Variation 3: pop to avoid division.  Nine ops. */
-pub fn snoob3(mut x: i32) -> i32 {
+/* Variation 3: basics_pop to avoid division.  Nine ops. */
+pub fn basics_snoob3(mut x: i32) -> i32 {
     let mut smallest = 0;
     let mut ripple = 0;
     let mut ones = 0;
@@ -512,7 +511,7 @@ pub fn snoob3(mut x: i32) -> i32 {
     ripple = x + smallest;       //     xxx1 0000 0000
     ones = x ^ ripple;           //     0001 1111 0000
     ones = (1 <<                 //     0000 0000 0111
-        (pop(ones as u32) - 2)) - 1;
+        (basics_pop(ones as u32) - 2)) - 1;
     return ripple | ones;        //     xxx1 0000 0111
 }
 
@@ -547,7 +546,7 @@ distributed random numbers, the average is 1.)
 number of trailing 0's is 15.5 (average of the numbers from 0 t 31). For
 n = 2, the average is 10 (I think). It gets lower for higher values of
 n. */
-pub fn snoob4(mut x: i32) -> i32 {
+pub fn basics_snoob4(mut x: i32) -> i32 {
     let mut y = x + (x & -x);
     x = x & !y;
     while ((x & 1) == 0) { x = x >> 1; }
@@ -557,32 +556,37 @@ pub fn snoob4(mut x: i32) -> i32 {
 
 #[test]
 fn test_basics3() {
-    assert_eq!(snoob(0b111011110000), 0b111100000111);
-    assert_eq!(snoob1(0b111011110000), 0b111100000111);
-    assert_eq!(snoob2(0b111011110000), 0b111100000111);
-    assert_eq!(snoob3(0b111011110000), 0b111100000111);
-    assert_eq!(snoob4(0b111011110000), 0b111100000111);
+    assert_eq!(basics_snoob(0b111011110000), 0b111100000111);
+    assert_eq!(basics_snoob1(0b111011110000), 0b111100000111);
+    assert_eq!(basics_snoob2(0b111011110000), 0b111100000111);
+    assert_eq!(basics_snoob3(0b111011110000), 0b111100000111);
+    assert_eq!(basics_snoob4(0b111011110000), 0b111100000111);
     assert_eq!(next_set_of_n_elements(0b111011110000), 0b111100000111);
 }
 
-// fn multover(mut x: i32, mut y: i32, mut z: i32, mut m: i32, mut n: i32, mut t: i32) -> i32 {
-//     m = nlz(x);
-//     n = nlz(y);
-//     if (m + n <= 30)
-//     goto
-//     overflow;
-//     t = x * (y >> 1);
-//     if ((int)
-//     t < 0) goto
-//     overflow;
-//     z = t * 2;
-//     if (y & 1) {
-//         z = z + x;
-//         if (z < x)
-//         goto
-//         overflow;
-//     }
-//
-//
-//     println!("Overflows\n");
-// }
+pub fn basics_multover(mut x: i32, mut y: i32, mut z: i32, mut m: i32, mut n: i32, mut t: i32) {
+    m = basics_nlz(x as u32) as i32;
+    n = basics_nlz(y as u32) as i32;
+    if m + n <= 30 {
+        println!("Overflows\n");
+        return;
+    }
+    t = x * (y >> 1);
+    if t < 0 {
+        println!("Overflows\n");
+        return;
+    }
+    z = t * 2;
+    if y & 1 != 0 {
+        z = z + x;
+        if z < x {
+            println!("Overflows\n");
+            return;
+        }
+    }
+}
+
+#[test]
+fn test_multover() {
+    basics_multover(1, 2, 3, 4, 5, 6);
+}

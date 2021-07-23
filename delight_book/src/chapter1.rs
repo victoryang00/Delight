@@ -6,7 +6,7 @@ pub fn ground_get_hex(index:i32) -> usize {
     let a = vec![0,1,2,3,4,5,6,7,8,9,10].iter();
     # [cfg(target_arch = "riscv64")]
     unsafe{
-
+        asm!()
     }
     // # [cfg(target_arch = "x86_64")]
     //     unsafe{

@@ -5,6 +5,7 @@ authors = ["victoryang00 <yangyiwei2000@gmail.com>"]
 
 [dependencies]
 libc = "^0"
+rand = "^0"
 
 [profile.dev]
 panic = "abort"

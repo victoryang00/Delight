@@ -1,4 +1,5 @@
 extern crate libc;
+extern crate rand;
 
 pub mod chapter1;
 pub mod chapter2;
@@ -29,6 +30,12 @@ use std::hash::{Hash, Hasher};
 use std::cmp::{Ord, Ordering, PartialOrd};
 
 use std::fmt::{Binary, Display, Formatter, LowerHex, Octal, UpperHex};
+
+#[cfg_attr(not(feature = "x86_64"), no_std)]
+#[cfg(target_arch = "x86_64")]
+pub use std::fmt::Error;
+#[cfg(target_arch = "riscv64")]
+pub use core::fmt::Error;
 
 /// modified from https://docs.rs/ux/0.0.1/src/ux/lib.rs.html#63
 
@@ -149,31 +156,31 @@ macro_rules! implement_common {
 
         // Implement formatting functions
         impl Display for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
                 let &$name(ref value) = self;
                 <$type as Display>::fmt(value, f)
             }
         }
         impl UpperHex for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
                 let &$name(ref value) = self;
                 <$type as UpperHex>::fmt(value, f)
             }
         }
         impl LowerHex for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
                 let &$name(ref value) = self;
                 <$type as LowerHex>::fmt(value, f)
             }
         }
         impl Octal for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
                 let &$name(ref value) = self;
                 <$type as Octal>::fmt(value, f)
             }
         }
         impl Binary for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
                 let &$name(ref value) = self;
                 <$type as Binary>::fmt(value, f)
             }
@@ -407,7 +414,15 @@ pub trait BitXnor<Rhs = Self> {
     type Output;
     fn xnor(self, rhs: Rhs) -> Self::Output;
 }
+
 not_impl! { i8 i16 }
+define_c!(#[doc="The 8-bit unsigned integer type."], c15, 17, i32);
+define_c!(#[doc="The 8-bit unsigned integer type."], c14, 15, i16);
+define_c!(#[doc="The 8-bit unsigned integer type."], c13, 14, i16);
+define_c!(#[doc="The 8-bit unsigned integer type."], c12, 13, i16);
+define_c!(#[doc="The 8-bit unsigned integer type."], c11, 12, i16);
+define_c!(#[doc="The 8-bit unsigned integer type."], c10, 11, i16);
+define_c!(#[doc="The 8-bit unsigned integer type."], c9, 10, i16);
 define_c!(#[doc="The 8-bit unsigned integer type."], c8, 9, i16);
 define_c!(#[doc="The 6-bit unsigned integer type."], c6, 7, i8);
 define_c!(#[doc="The 5-bit unsigned integer type."], c5, 6, i8);
@@ -418,4 +433,5 @@ define_c!(#[doc="The 1-bit unsigned integer type."], c1, 2, i8);
 
 implement_into!([c1, c2, c3, c4, c5, c6], i8);
 implement_into!([c1, c2, c3, c4, c5, c6], i64);
+implement_into!([c8,c9,c10,c11,c12,c13,c14], i16);
 implement_from!(c6, [c1, c2, c3, c4, c5]);
