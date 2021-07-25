@@ -111,7 +111,8 @@ pub fn basics_demorgan_9(x: c8, y: c8) -> bool {
     !(x - y) == !x + y
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_basics1() {
     assert_eq!(basics_get_and(c8(0b01011000)), c8(0b001010000));
     assert_eq!(basics_get_or(c8(0b10100111)), c8(0b10101111));
@@ -264,25 +265,25 @@ pub fn basics_ntz4a(mut x: u32) -> u32 {
     let mut y;
     let mut n;
 
-    if (x == 0) { return 32; }
+    if x == 0 { return 32; }
     n = 31;
     y = x << 16;
-    if (y != 0) {
+    if y != 0 {
         n = n - 16;
         x = y;
     }
     y = x << 8;
-    if (y != 0) {
+    if y != 0 {
         n = n - 8;
         x = y;
     }
     y = x << 4;
-    if (y != 0) {
+    if y != 0 {
         n = n - 4;
         x = y;
     }
     y = x << 2;
-    if (y != 0) {
+    if y != 0 {
         n = n - 2;
         x = y;
     }
@@ -362,8 +363,7 @@ http://www.ciphersbyritter.com/NEWS4/BITCT.HTM Table
 entries marked "u" are unused. 6 ops including a
 multiply, plus an indexed load. */
 pub fn basics_ntz8(mut x: i32) -> i32 {
-    let table =
-        vec![32, 0, 1, 12, 2, 6, 99, 13, 3, 99, 7, 99, 99, 99, 99, 14,
+    let table = [32, 0, 1, 12, 2, 6, 99, 13, 3, 99, 7, 99, 99, 99, 99, 14,
              10, 4, 99, 99, 8, 99, 99, 25, 99, 99, 99, 99, 99, 21, 27, 15,
              31, 11, 5, 99, 99, 99, 99, 99, 9, 99, 99, 24, 99, 99, 20, 26,
              30, 99, 99, 99, 99, 23, 99, 19, 29, 99, 22, 18, 28, 17, 16, 99];
@@ -375,8 +375,7 @@ pub fn basics_ntz8(mut x: i32) -> i32 {
 /* Seal's algorithm with multiply expanded.
 9 elementary ops plus an indexed load. */
 pub fn basics_ntz8a(mut x: i32) -> i32 {
-    let table =
-        vec![32, 0, 1, 12, 2, 6, 99, 13, 3, 99, 7, 99, 99, 99, 99, 14,
+    let table = [32, 0, 1, 12, 2, 6, 99, 13, 3, 99, 7, 99, 99, 99, 99, 14,
              10, 4, 99, 99, 8, 99, 99, 25, 99, 99, 99, 99, 99, 21, 27, 15,
              31, 11, 5, 99, 99, 99, 99, 99, 9, 99, 99, 24, 99, 99, 20, 26,
              30, 99, 99, 99, 99, 23, 99, 19, 29, 99, 22, 18, 28, 17, 16, 99];
@@ -391,7 +390,7 @@ pub fn basics_ntz8a(mut x: i32) -> i32 {
 /* Reiser's algorithm. Three ops including a "remainder,"
 plus an indexed load. */
 pub fn basics_ntz9(mut x: i32) -> i32 {
-    let table = vec![32, 0, 1, 26, 2, 23, 27,
+    let table = [32, 0, 1, 26, 2, 23, 27,
                      99, 3, 16, 24, 30, 28, 11, 99, 13, 4,
                      7, 17, 99, 25, 22, 31, 15, 29, 10, 12,
                      6, 99, 21, 14, 9, 5, 20, 8, 19, 18];
@@ -406,19 +405,17 @@ table. The de Bruijn sequence used here is
 obtained from Danny Dube's October 3, 1997, posting in
 comp.compression.research. Thanks to Norbert Juffa for this reference. */
 pub fn basics_ntz10(mut x: i32) -> i32 {
-    let table =
-        vec![0, 1, 2, 24, 3, 19, 6, 25, 22, 4, 20, 10, 16, 7, 12, 26,
+    let table = [0, 1, 2, 24, 3, 19, 6, 25, 22, 4, 20, 10, 16, 7, 12, 26,
              31, 23, 18, 5, 21, 9, 15, 11, 30, 17, 8, 14, 29, 13, 28, 27];
 
-    if (x == 0) { return 32; }
+    if x == 0 { return 32; }
     x = (x & -x) * 0x04D7651F;
     return table[(x >> 27) as usize];
 }
 
 /* Norbert Juffa's code, answer to exercise 1 of Chapter 5 (2nd ed). */
 pub fn basics_ntz11(mut n: i32) -> i32 {
-    let tab =
-        vec![0, 1, 2, 24, 3, 19, 6, 25,
+    let tab = [0, 1, 2, 24, 3, 19, 6, 25,
              22, 4, 20, 10, 16, 7, 12, 26,
              31, 23, 18, 5, 21, 9, 15, 11,
              30, 17, 8, 14, 29, 13, 28, 27
@@ -436,7 +433,8 @@ pub fn basics_ntz11(mut n: i32) -> i32 {
     return if n > 0 { tab[(k >> 27) as usize] } else { 32 };
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_basics2() {
     assert_eq!(basics_ntz(12), 2);
     assert_eq!(basics_ntz1(12), 2);
@@ -554,7 +552,8 @@ pub fn basics_snoob4(mut x: i32) -> i32 {
     return y | x;
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_basics3() {
     assert_eq!(basics_snoob(0b111011110000), 0b111100000111);
     assert_eq!(basics_snoob1(0b111011110000), 0b111100000111);
@@ -568,25 +567,31 @@ pub fn basics_multover(mut x: i32, mut y: i32, mut z: i32, mut m: i32, mut n: i3
     m = basics_nlz(x as u32) as i32;
     n = basics_nlz(y as u32) as i32;
     if m + n <= 30 {
-        println!("Overflows\n");
         return;
     }
     t = x * (y >> 1);
     if t < 0 {
-        println!("Overflows\n");
         return;
     }
     z = t * 2;
     if y & 1 != 0 {
         z = z + x;
         if z < x {
-            println!("Overflows\n");
             return;
         }
     }
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_multover() {
     basics_multover(1, 2, 3, 4, 5, 6);
+}
+
+pub fn basics_abs(mut x: i64) -> i64 {
+    if x > 0 {
+        x
+    } else {
+        -x
+    }
 }

@@ -1,13 +1,11 @@
 use ckb_vm::{machine::{
-    aot::AotCompilingMachine,
     asm::{AsmCoreMachine, AsmMachine},
-    CoreMachine, VERSION0, VERSION1,
-}, memory::Memory, Debugger, DefaultMachineBuilder, Error, Instruction, Register, instructions::{extract_opcode, insts}, SupportMachine, Syscalls, ISA_IMC, DefaultMachine, Machine, Bytes};
-use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::Arc;
-use std::{fs, u64};
-use std::fmt::Debug;
+    CoreMachine, VERSION0,
+}, memory::Memory, DefaultMachineBuilder, Error, Instruction, Register, instructions::{extract_opcode, insts}, SupportMachine, Syscalls, ISA_IMC, DefaultMachine, Machine, Bytes};
+use std::{fs, path::Path, u64, io};
 use ckb_vm::decoder::build_decoder;
+use std::fs::DirEntry;
+use std::io::ErrorKind;
 
 pub fn instruction_cycles(i: Instruction) -> u64 {
     match extract_opcode(i) {
@@ -30,8 +28,8 @@ pub fn instruction_cycles(i: Instruction) -> u64 {
         insts::OP_BLT => 3,
         insts::OP_BLTU => 3,
         insts::OP_BNE => 3,
-        insts::OP_EBREAK => 500,
-        insts::OP_ECALL => 500,
+        insts::OP_EBREAK => 1000,
+        insts::OP_ECALL => 1000,
         insts::OP_JAL => 3,
         insts::OP_MUL => 5,
         insts::OP_MULW => 5,
@@ -101,14 +99,6 @@ impl<R: Register, M: Memory<REG=R>, Inner: SupportMachine<REG=R, MEM=M>> CoreMac
     }
 }
 
-fn sprint_loc_file_line(loc:&Option<addr2line::Location>)->String{
-    todo!()
-}
-
-fn sprint_loc_file(loc:&Option<addr2line::Location>)->String{
-    todo!()
-}
-
 impl<R: Register, M: Memory<REG=R>, Inner: SupportMachine<REG=R, MEM=M>> Machine
 for PProfMachine<'_, Inner>
 {
@@ -147,18 +137,38 @@ PProfMachine<'a, Inner>
     }
 }
 
+fn print_dir_contents(dir: &Path) -> Result<String, Box<io::Error>> {
+    if !dir.is_dir(){
+        return Ok("is not a directory!".parse().unwrap());
+    }
+
+    for entry in fs::read_dir(dir)? {
+        let path = entry?.path();
+        let file_name = path.file_name().unwrap();
+        if file_name.to_string_lossy().contains("delight_book") {
+            return Ok(file_name.to_string_lossy().parse().unwrap());
+        }
+    }
+
+    return Ok("Not found".parse().unwrap());
+}
+
 fn main() {
-    let buffer =
-        fs::read("target/riscv64imac-unknown-none-elf/debug/deps/delight_book-29257b8d53a613ae")
-            .unwrap()
-            .into();
-    let asm_core = AsmCoreMachine::new(ISA_IMC, VERSION0, u64::max_value());
-    let core = DefaultMachineBuilder::new(asm_core).build();
-    let mut machine = AsmMachine::new(core, None);
-    machine
-        .load_program(&buffer, &vec!["simple".into()])
-        .unwrap();
-    let result = machine.run();
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), 0);
+    match print_dir_contents(Path::new("target/riscv64imac-unknown-none-elf/debug/deps/")) {
+       Ok(s)=> {
+           let buffer =
+               fs::read("target/riscv64imac-unknown-none-elf/debug/deps/".to_owned() +&s)
+                   .unwrap()
+                   .into();
+           println!("Dir: {}", s.to_string());
+           let asm_core = AsmCoreMachine::new(ISA_IMC, VERSION0, u64::max_value());
+           let core = DefaultMachineBuilder::new(asm_core).build();
+           let mut machine = AsmMachine::new(core, None);
+           machine
+               .load_program(&buffer, &vec!["simple".into()])
+               .unwrap();
+           machine.run();
+       },
+        Err(s) => println!("Error: {}", s.to_string()),
+    }
 }

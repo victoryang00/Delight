@@ -1,7 +1,13 @@
+#![cfg_attr(not(target_arch = "x86_64"), no_std)]
+#![cfg_attr(not(target_arch = "x86_64"), no_main)]
+#![cfg_attr(not(target_arch = "x86_64"),feature(custom_test_frameworks, lang_items, start))]
+#![cfg_attr(not(target_arch = "x86_64"),test_runner(crate::test_runner))]
+
 extern crate libc;
 extern crate rand;
+extern crate rand_core;
+extern crate rand_isaac;
 
-pub mod chapter1;
 pub mod chapter2;
 pub mod chapter3;
 pub mod chapter4;
@@ -13,25 +19,16 @@ pub mod chapter9;
 pub mod chapter10;
 pub mod chapter11;
 pub mod chapter12;
-pub mod chapter13;
-pub mod chapter14;
 pub mod chapter15;
 pub mod chapter16;
 pub mod chapter17;
-pub mod chapter18;
-pub mod appendixA;
-pub mod appendixB;
-pub mod appendixC;
 
-use std::ops::{Add, BitAnd, BitOr, BitOrAssign, BitXor, Not, Shl, ShlAssign, Shr, ShrAssign, Sub};
+#[cfg(target_arch = "x86_64")]
+use std::{ops::{Add, BitAnd, BitOr, BitOrAssign, BitXor, Not, Shl, ShlAssign, Shr, ShrAssign, Sub}, hash::{Hash, Hasher}, cmp::{Ord, Ordering, PartialOrd}, fmt::{Binary, Display, Formatter, LowerHex, Octal, UpperHex}};
 
-use std::hash::{Hash, Hasher};
+#[cfg(target_arch = "riscv64")]
+use core::{ops::{Add, BitAnd, BitOr, BitOrAssign, BitXor, Not, Shl, ShlAssign, Shr, ShrAssign, Sub}, hash::{Hash, Hasher}, cmp::{Ord, Ordering, PartialOrd}, fmt::{Binary, Display, Formatter, LowerHex, Octal, UpperHex}};
 
-use std::cmp::{Ord, Ordering, PartialOrd};
-
-use std::fmt::{Binary, Display, Formatter, LowerHex, Octal, UpperHex};
-
-#[cfg_attr(not(feature = "x86_64"), no_std)]
 #[cfg(target_arch = "x86_64")]
 pub use std::fmt::Error;
 #[cfg(target_arch = "riscv64")]
@@ -435,3 +432,28 @@ implement_into!([c1, c2, c3, c4, c5, c6], i8);
 implement_into!([c1, c2, c3, c4, c5, c6], i64);
 implement_into!([c8,c9,c10,c11,c12,c13,c14], i16);
 implement_from!(c6, [c1, c2, c3, c4, c5]);
+
+
+
+#[cfg(test)]
+fn test_runner(tests: &[&dyn Fn()]) {
+    for test in tests {
+        test();
+    }
+}
+
+#[cfg(target_arch = "riscv64")]
+#[start]
+pub extern "C" fn _start() -> ! {
+    loop {}
+}
+
+#[cfg(target_arch = "riscv64")]
+#[panic_handler]
+fn my_panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
+}
+
+#[cfg(target_arch = "riscv64")]
+#[lang = "eh_personality"]
+extern "C" fn eh_personality() {}

@@ -22,18 +22,11 @@
 
 extern crate libc;
 
-use libc::c_char;
+#[cfg(target_arch = "x86_64")]
 use std::borrow::{Borrow, BorrowMut};
+#[cfg(target_arch = "riscv64")]
+use core::borrow::{Borrow, BorrowMut};
 use chapter2::basics_isolate_1;
-
-const CTYPE_u8_1: *const c_char = -1_isize as *const c_char;
-const CTYPE_u8_2: *const c_char = std::usize::MAX as *const c_char;
-
-#[test]
-fn test_ctype() {
-    assert_eq!(CTYPE_u8_1, 0xffffffffffffffff as *const i8);
-    assert_eq!(CTYPE_u8_2, 0xffffffffffffffff as *const i8);
-}
 
 pub fn hilbert_rtls_s_from_xy1(mut x: u32, mut y: u32, n: i32) -> u32 {
     let i = 0;
@@ -74,15 +67,18 @@ pub fn hilbert_rtls_s_from_xy(x: i32, y: i32, n: i32) -> i32 {
     return s >> (32 - 2 * n);
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_hilbert1() {
     let n = 1;
     let N = 1 << n;                          // N = 2**n.
-    println!("    x     y     s, order {} Hilbert curve.\n", n);
+    // println!("    x     y     s, order {} Hilbert curve.\n", n);
     for x in 0..N {
         for y in 0..N {
-            println!("{} {} {}\n", x, y, hilbert_rtls_s_from_xy1(x, y, n));
-            println!("{} {} {}\n", x, y, hilbert_rtls_s_from_xy(x as i32, y as i32, n));
+            // println!("{} {} {}\n", x, y, hilbert_rtls_s_from_xy1(x, y, n));
+            hilbert_rtls_s_from_xy1(x, y, n);
+            // println!("{} {} {}\n", x, y, hilbert_rtls_s_from_xy(x as i32, y as i32, n));
+            hilbert_rtls_s_from_xy(x as i32, y as i32, n);
         }
     }
 }
@@ -211,24 +207,25 @@ fn hilbert_s_from_xy(x: u32, y: u32, n: u32) -> u32 {
     return s;
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_hilbert2() {
     let n = 1;
     let N = 1 << 2 * n;                          // N = 2**n.
     let mut x = 0;
     let mut y = 0;
-    println!("(x, y) coordinates along the Hilbert curve of order {}.\n", n);
-    println!("    s     x     y\n");
+    // println!("(x, y) coordinates along the Hilbert curve of order {}.\n", n);
+    // println!("    s     x     y\n");
     for s in 0..N {
         hilbert_xy_from_s(s, n, &mut x, &mut y);
         hilbert_s_from_xy(x as u32, y as u32, n as u32);
-        println!("{} {} {}\n", s, x, y);
+        // println!("{} {} {}\n", s, x, y);
     }
 }
 
 /* Converts the unsigned integer k to binary character form.
 Result is in string s of length len. */
-pub fn hilbert_binary(mut k: i32, len: usize, mut s: Vec<char>) -> Vec<char> {
+pub fn hilbert_binary(mut k: i32, len: usize, mut s: & mut [char]) -> & mut [char] {
     s[len] = '\x00';
     for i in (len - 1)..0 {
         if k & 1 != 0 { s[i] = '1'; } else { s[i] = '0'; }
@@ -239,7 +236,7 @@ pub fn hilbert_binary(mut k: i32, len: usize, mut s: Vec<char>) -> Vec<char> {
 
 /* Converts the unsigned integer k to binary character form.
 Result is in string s of length len. */
-pub fn hilbert_binary1(mut k: i32, len: usize, mut s: Vec<char>) -> Vec<char> {
+pub fn hilbert_binary1(mut k: i32, len: usize, mut s: & mut [char]) -> & mut [char] {
     s[len] = '\x00';
     for i in (len - 1)..0 {
         if k & 1 != 0 { s[i] = '1'; } else { s[i] = '0'; }
@@ -248,12 +245,13 @@ pub fn hilbert_binary1(mut k: i32, len: usize, mut s: Vec<char>) -> Vec<char> {
     s
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_binary() {
-    let test: Vec<char> = vec!['1', '1'];
-    let result: Vec<char> = vec!['1', '\x00'];
-    assert_eq!(hilbert_binary(1, 1, test.clone()), result.clone());
-    assert_eq!(hilbert_binary1(1, 1, test.clone()), result.clone());
+    let mut test = ['1', '1'];
+    let mut result = ['1', '\x00'];
+    assert_eq!(hilbert_binary(1, 1, test.borrow_mut()), result);
+    assert_eq!(hilbert_binary1(1, 1, test.borrow_mut()), result);
     // let a=1;
 }
 
@@ -321,7 +319,8 @@ pub fn hilbert_glsxy3<'a>(mut s: i64, n: i64, xp: &'a mut i64, yp: &'a mut i64) 
     addressOfXY { s, xp, yp }
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_glsxy() {
     let n = 10;
     let N = 1 << (2 * n);
@@ -513,7 +512,8 @@ pub fn hilbert_lams(mut x: u64, mut y: u64, n: u32) -> u64 {
     return s;
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_lams() {
     let n = 10;
     let N = 1 << n;
@@ -555,7 +555,6 @@ pub fn hilbert_logic_inc_from_xy(x: i32, y: i32, n: i32, Ip: &mut i32, Wp: &mut 
         let W = !S & !X & Y | S & !(X ^ Y) | W & X & !Y;
         let S = !(S ^ Y);
         let C = C ^ (X & !Y);
-        println!("i = {}, xi = {}, yi = {}, I = {}, W = {}, S = {}, C = {}\n", i, xi, yi, I, W, S, C);
     }
     *Ip = I;                     // Return I and W
     *Wp = W;                     // to caller.
@@ -618,7 +617,8 @@ pub fn hilbert_logic_xy_from_s(s: i32, n: i32, xp: &mut i32, yp: &mut i32) {
     return;
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_logic() {
     let n = 10;
     let mut I = 0;
@@ -638,8 +638,10 @@ fn test_logic() {
 
 
 static mut XX: i32 = -1;
-static mut YY: i32 = 0;              // Global variables.
-static mut SS: i32 = 0;                      // Dist. along curve.
+static mut YY: i32 = 0;
+// Global variables.
+static mut SS: i32 = 0;
+// Dist. along curve.
 static mut blen: i32 = 0;                      // Dist. along curve.
 
 pub unsafe fn hilbert(mut dir: i32, rot: i32, order: i32) {
@@ -658,20 +660,20 @@ pub unsafe fn hilbert(mut dir: i32, rot: i32, order: i32) {
     hilbert(dir, -rot, order - 1);
 }
 
-pub unsafe fn binary(mut k: i32, len: usize, mut s: Vec<char>) {
+pub unsafe fn binary(mut k: i32, len: i32, mut s: & mut [char]) {
     /* Converts the unsigned integer k to binary character
     form.  Result is string s of length len. */
-    s[len] = '\x00';
-    for i in len - 1..0 {
-        if k & 1!=0 { s[i] = "1".parse().unwrap(); } else { s[i] = "0".parse().unwrap(); }
+    s[len as usize] = '\x00';
+    for i in (len - 1) as usize..0 {
+        if k & 1 != 0 { s[i] = "1".parse().unwrap(); } else { s[i] = "0".parse().unwrap(); }
         k = k >> 1;
     }
 }
 
 pub unsafe fn step(dir: i32) {
-    let ii: Vec<char> = Vec::with_capacity(17);
-    let xx: Vec<char> = Vec::with_capacity(17);
-    let yy: Vec<char> = Vec::with_capacity(17);
+    let mut ii = ['\x00';17];
+    let mut xx = ['\x00';17];
+    let mut yy = ['\x00';17];
 
     match dir & 3 {
         0 => XX = XX + 1,
@@ -680,9 +682,16 @@ pub unsafe fn step(dir: i32) {
         3 => YY = YY - 1,
         _ => {}
     }
-    binary(SS, (2 * blen) as usize, ii.clone());
-    binary(XX, blen as usize, xx.clone());
-    binary(YY, blen as usize, yy.clone());
-    println!("{}   {}   {} {}\n", dir, ii.into_iter().collect::<String>() , xx.into_iter().collect::<String>(), yy.into_iter().collect::<String>());
+    binary(SS, (2 * blen) , ii.borrow_mut());
+    binary(XX, blen , xx.borrow_mut());
+    binary(YY, blen , yy.borrow_mut());
     SS = SS + 1;                   // Increment distance.
+}
+
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
+fn test_hilbert() {
+    unsafe {
+        hilbert(1, 1, 1);
+    }
 }

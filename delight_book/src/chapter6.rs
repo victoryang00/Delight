@@ -28,7 +28,7 @@ pub fn search_zbytel3(x: i64) -> i64 {
 }
 
 pub fn search_zbytel3a(x: u32) -> u32 {
-    let table = vec![4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0];  // Original byte: 00 80 other
+    let table = [4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0];  // Original byte: 00 80 other
     let mut y = (x & 0x7F7F7F7F) + 0x7F7F7F7F; // 7F 7F 1xxxxxxx
     y = !(y | x | 0x7F7F7F7F);         // 80 00 00000000
     return table[(y.wrapping_mul(0x00204081).wrapping_shr(28)) as usize];
@@ -79,7 +79,7 @@ function finds the leftmost one.
    Executes in 8 + 4n instructions on the basic RISC (w/o andc), plus
 the time for the nlz function, for n >= 2, where n is the length of the
 shortest contiguous string of 1's in x. */
-pub fn search_fminstr1(mut x: i32, mut apos: & mut i32) -> i32 {
+pub fn  search_fminstr1(mut x: i32, mut apos: & mut i32) -> i32 {
     if x == 0 {*apos = 32; return 0; }
     let b = !(x >> 1) & x;   // 0-1 transitions.
     let mut e = x & !(x << 1);   // 1-0 transitions.
@@ -170,7 +170,7 @@ pub fn search_bestfit1(mut x: i32, n: i32, apos: & mut i32) -> i32 {
 }
 
 // Find first string of 1's of a given length, simple routine.
-pub fn search_ffsr11(mut x: i32, n: i32) -> i32 {
+pub fn search_ffstr11(mut x: i32, n: i32) -> i32 {
     let mut p = 0;               // Initialize position to return.
     while x != 0 {
         let mut k = basics_nlz(x as u32);       // Skip over initial 0's
@@ -218,4 +218,14 @@ pub fn search_ffstr13(mut x: i32, mut n: i32) -> u32 {
     x = x & (x << s);
 
     return basics_nlz(x as u32);
+}
+
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
+fn test_search(){
+    assert_eq!(search_bestfit(1,1,&mut 1),1);
+    assert_eq!(search_bestfit1(1,1,&mut 1),1);
+    assert_eq!(search_ffstr11(1,1),31);
+    assert_eq!(search_ffstr12(1,1),31);
+    assert_eq!(search_ffstr13(1,1),31);
 }

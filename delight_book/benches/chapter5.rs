@@ -1,11 +1,11 @@
 #![feature(test)]
-
 extern crate test;
 extern crate delight_book;
 
 use delight_book::chapter5::*;
 use delight_book::*;
 use std::mem::transmute;
+use std::borrow::BorrowMut;
 
 /// https://blog.knoldus.com/safe-way-to-access-private-fields-in-rust/
 
@@ -44,7 +44,7 @@ fn bench_counts_pop(b: &mut test::Bencher) {
 fn bench_counts_pop_array(b: &mut test::Bencher) {
     b.iter(|| {
         for i in 0..100 {
-            assert_eq!(counts_pop_array(vec![1, 2], 1), 1);
+            assert_eq!(counts_pop_array([1, 2].borrow_mut(), 1), 1);
         }
     })
 }
@@ -228,7 +228,7 @@ fn bench_counts_pop_array_hard(b: &mut test::Bencher) {
         s1 = s1 + counts_pop(A[i]);
     }
 
-    let s2 = counts_pop_array(A, n as i64);
+    let s2 = counts_pop_array(A.borrow_mut(), n as i64);
     assert_eq!(s1, s2);
 }
 
@@ -249,7 +249,7 @@ fn bench_counts_popDiff(b: &mut test::Bencher) {
 
 #[bench]
 #[allow(overflowing_literals)]
-fn bench_coutns_popCmpr(b: &mut test::Bencher) {
+fn bench_counts_popCmpr(b: &mut test::Bencher) {
     let TEST = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0x3F, 0x40, 0x41, 0x7f, 0x80, 0x81, 0xfe, 0xff,
                     0x4000, 0x4001, 0x7000, 0x7fff, 0x55555555, 0xAAAAAAAA, 0xFF000000, 0xC0C0C0C0, 0x0FFFFFF0, 0x80000000, 0xFFFFFFFE, 0xFFFFFFFF];
     b.iter(|| {
@@ -263,4 +263,25 @@ fn bench_coutns_popCmpr(b: &mut test::Bencher) {
             }
         }
     });
+}
+
+#[bench]
+#[allow(overflowing_literals)]
+fn bench_counts_parity(b: &mut test::Bencher) {
+    let TEST = [0,0, 1,1, 2,1, 3,0, 4,1, 5,0,
+        6,0, 7,1, 8,1, 9,0, 10,0, 11,1, 12,0, 13,1, 14,1,
+        15,0, 16,1, 17,0, 18,0, 19,1, 20,0, 21,1, 22,1, 23,0,
+        24,0, 25,1, 26,1, 27,0, 28,1, 29,0, 30,0, 31,1,
+        0x55555555,0, 0xAAAAAAAA,0, 0x77777770,1,
+        0x80000000,1, 0x80000001,0, 0xFFFFFFFE,1, 0xFFFFFFFF,0,0,0, 1,0x81, 2,0x82, 3,3, 4,0x84,
+        5,5, 6,6, 7,0x87, 8,0x88, 9,9, 10,10, 11,0x8B, 12,12,
+        13,0x8D, 14,0x8E, 15,15, 16,0x90, 0x7E,0x7E, 0x7F,0xFF];
+
+    for i in (0..116/2).step_by(2){
+        assert_eq!(counts_parity1(TEST[i]),TEST[i+1]);
+        assert_eq!(counts_parity1a(TEST[i]),TEST[i+1]);
+        assert_eq!(counts_parity2(TEST[i]),TEST[i+1]);
+        // assert_eq!(counts_parity3(TEST[i] as i32),TEST[i+1] as i32);
+        // assert_eq!(counts_parity4(TEST[i]),TEST[i+1]);
+    }
 }

@@ -19,5 +19,6 @@ jobs:
     - name: Build
       run: cargo test --verbose
       bench: cargo bench --verbose
+      test: cd ./delight_book/ && cargo test --no-run && cd ..
     - name: Run tests
       run: cargo run --verbose

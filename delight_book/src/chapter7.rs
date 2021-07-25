@@ -1,15 +1,20 @@
-/* A the functions herein are for transposing an 8x8 bit matrix, that
-is presumed to be a block of a larger matrix of size m x n bytes. Brief
-description of the functions:
+#[cfg(target_arch = "x86_64")]
+use std::borrow::BorrowMut;
+#[cfg(target_arch = "riscv64")]
+use core::borrow::BorrowMut;
 
-transpose8vn:    Very naive method, directly places one bit at a time.
-transpose8b64:   Basic shifting method that directly places a few bits at a time.
-transpose8b64c:  Compact version of 8b64; uses a for-loop.
-transpose8bS64:  Like 8b64, but uses GLS's bit swapping device.
-transpose8r64:   Basic recursive method (the main point of this comparison study).
-transpose8rS64:  Like 8r64, but uses GLS's bit swapping device.
-transpose8b32, ..., 8rS32: Above four coded for a 32-bit machine.
-transpose8rSr32: Like 8rS32 but done in reverse (coarse to fine granularity). */
+/// A the functions herein are for transposing an 8x8 bit matrix, that
+/// is presumed to be a block of a larger matrix of size m x n bytes. Brief
+/// description of the functions:
+///
+/// transpose8vn:    Very naive method, directly places one bit at a time.
+/// transpose8b64:   Basic shifting method that directly places a few bits at a time.
+/// transpose8b64c:  Compact version of 8b64; uses a for-loop.
+/// transpose8bS64:  Like 8b64, but uses GLS's bit swapping device.
+/// transpose8r64:   Basic recursive method (the main point of this comparison study).
+/// transpose8rS64:  Like 8r64, but uses GLS's bit swapping device.
+/// transpose8b32, ..., 8rS32: Above four coded for a 32-bit machine.
+/// transpose8rSr32: Like 8rS32 but done in reverse (coarse to fine granularity).
 
 /* This is the very naive method, that directly places one bit at a
 time. This may be too naive to include in the book (i.e., maybe we
@@ -22,7 +27,7 @@ should take this out if there should be another edition).
    56 ORs (or ADDs or XORs)
    --
   174 total (very naive method, placing one bit at a time) */
-pub fn transpose8vn(A: Vec<char>, m: usize, n: usize, mut B: Vec<char>) {
+pub fn transpose8vn<'a>(A: &'a  mut [char], m: usize, n: usize, mut B: &'a  mut [char]) -> &'a  mut [char] {
 // Load the array into eight one-byte variables.
     let a0 = A[0] as u8;
     let a1 = A[m] as u8;
@@ -50,12 +55,12 @@ pub fn transpose8vn(A: Vec<char>, m: usize, n: usize, mut B: Vec<char>) {
     B[5 * n] = b5 as char;
     B[6 * n] = b6 as char;
     B[7 * n] = b7 as char;
+    B
 }
 
 /* The above executes in 174 instructions (just the calculation part).
-62 ANDs, 56 shifts, and 56 ORs. */
-
-/* transpose8b64 directly places the bits in the target array. It uses
+62 ANDs, 56 shifts, and 56 ORs.
+transpose8b64 directly places the bits in the target array. It uses
 64-bit quantities, which makes it easy to understand. It can be easily
 translated for execution on a 32-bit machine, either by hand or by
 letting the compiler do it, if your compiler supports 64-bit integers on
@@ -101,7 +106,7 @@ mask. This is reduces the number of distinct masks that are required.
       one, except the two smaest masks can be immediate fields).
    --
    52 total (64-bit machine, direct placement) */
-pub fn transpose8b64(A: Vec<char>, m: usize, n: usize, mut B: Vec<i32>) {
+pub fn transpose8b64<'a>(A: &'a  mut [char], m: usize, n: usize, mut B: &'a  mut [i32]) -> &'a  mut [i32] {
     let mut x = 0;
     for i in 0..7 {      // Load 8 bytes from the
         x = x << 8 | A[m * i] as u64;// input array and pack
@@ -126,12 +131,13 @@ pub fn transpose8b64(A: Vec<char>, m: usize, n: usize, mut B: Vec<i32>) {
     for i in 7..0 {   // Store result into
         B[n * i] = y as i32;
         y = y >> 8;
-    }  // output array B.
+    }  // output array B
+    B
 }
 
 /* This is a compact version of transpose8b64, ca. 75 instructions for
 the calculation part. */
-pub fn transpose8b64c(A: Vec<char>, m: usize, n: usize, mut B: Vec<char>) {
+pub fn transpose8b64c<'a>(A: &'a  mut [char], m: usize, n: usize, mut B: &'a  mut [char]) -> &'a  mut [char] {
     let mut x: u64 = 0;
     for i in 0..7 {    // Load 8 bytes from the
         x = x << 8 | A[m * i] as u64;
@@ -148,6 +154,7 @@ pub fn transpose8b64c(A: Vec<char>, m: usize, n: usize, mut B: Vec<char>) {
         B[n * i] = (y as u8) as char;
         y = y >> 8;
     }  // output array B.
+    B
 }
 
 /* This is transpose8b64 but using the GLS method of bit field swapping.
@@ -158,7 +165,7 @@ pub fn transpose8b64c(A: Vec<char>, m: usize, n: usize, mut B: Vec<char>) {
     8 Mask generation (many can be generated from earlier masks)
    --
    50 total (direct placement method for a 64-bit machine, using GLS's bit swapping) */
-pub fn transpose8bS64(A: Vec<char>, m: usize, n: usize, mut B: Vec<char>) {
+pub fn transpose8bS64<'a>(A: &'a  mut [char], m: usize, n: usize, mut B: &'a  mut [char]) -> &'a  mut [char] {
     let mut x: u64 = 0;
     for i in 7..0 {    // Load 8 bytes from the
         x = x << 8 | A[m * i] as u64;
@@ -184,6 +191,7 @@ pub fn transpose8bS64(A: Vec<char>, m: usize, n: usize, mut B: Vec<char>) {
         B[n * i] = (x as u8) as char;
         x = x >> 8;
     }  // output array B.
+    B
 }
 
 /* transpose8r64 is the basic recursive method for a 64-bit machine.
@@ -197,7 +205,7 @@ mask. This is reduces the number of distinct masks that are required.
    17 Mask generation
    --
    38 total (64-bit machine, basic recursive method) */
-pub fn transpose8r64(A: Vec<i32>, m: usize, n: usize, mut B: Vec<i32>) {
+pub fn transpose8r64(A: & mut [i32], m: usize, n: usize, mut B: & mut [i32]) {
     let mut x: u64 = 0;
     for i in 0..7 { // Load 8 bytes from the
         x = x << 8 | A[m * i] as u64;
@@ -222,7 +230,7 @@ pub fn transpose8r64(A: Vec<i32>, m: usize, n: usize, mut B: Vec<i32>) {
     8 Mask generation
    --
    26 total (64-bit machine, recursive method with GLS bit swapping) */
-pub fn transpose8rS64(A: Vec<i32>, m: usize, n: usize, mut B: Vec<i32>) {
+pub fn transpose8rS64(A: & mut [i32], m: usize, n: usize, mut B: & mut [i32]) {
     let mut x: u64 = 0;
     for i in 0..7 {     // Load 8 bytes from the
         x = x << 8 | A[m * i] as u64;
@@ -253,7 +261,7 @@ consistency, a were changed to that form.
    10 Mask generation (many can be generated from earlier masks)
    --
    84 total (32-bit machine, direct placement) */
-pub fn transpose8b32(A: Vec<i32>, m: usize, n: usize, mut B: Vec<i32>) {
+pub fn transpose8b32(A: & mut [i32], m: usize, n: usize, mut B:& mut [i32]) {
 // Load the array and pack it into xh and xl.
 
     let xh: u64 = ((A[0] << 24) | (A[m] << 16) | (A[2 * m] << 8) | A[3 * m]) as u64;
@@ -302,7 +310,7 @@ pub fn transpose8b32(A: Vec<i32>, m: usize, n: usize, mut B: Vec<i32>) {
     7 Mask generation (many can be generated from earlier masks)
    --
    81 total (32-bit machine, direct placement with GLS bit swapping) */
-pub fn transpose8bS32(A: Vec<i32>, m: usize, n: usize, mut B: Vec<i32>) {
+pub fn transpose8bS32(A: & mut [i32], m: usize, n: usize, mut B: & mut [i32]) {
 // Load the array and pack it into xh and xl.
 
     let mut xh: u64 = ((A[0] << 24) | (A[m] << 16) | (A[2 * m] << 8) | A[3 * m]) as u64;
@@ -358,7 +366,7 @@ HD. It's too similar to transpose8rS32, which is a little better (probably).
     9 mask generation
    --
    45 total (recursive method, direct placement at each step) */
-pub fn transpose8r32(A: Vec<i32>, m: usize, n: usize, mut B: Vec<i32>) {
+pub fn transpose8r32(A: & mut [i32], m: usize, n: usize, mut B: & mut [i32]) {
 // Load the array and pack it into x and y.
     let mut x: u64 = ((A[0] << 24) | (A[m] << 16) | (A[2 * m] << 8) | A[3 * m]) as u64;
     let mut y: u64 = ((A[4 * m] << 24) | (A[5 * m] << 16) | (A[6 * m] << 8) | A[7 * m]) as u64;
@@ -396,10 +404,10 @@ pub fn transpose8r32(A: Vec<i32>, m: usize, n: usize, mut B: Vec<i32>) {
     5 mask generation
    --
    37 total (recursive method using GLS's bit swapping) */
-pub fn transpose8rS32(A: Vec<i32>, m: usize, n: usize, mut B: Vec<i32>) {
+pub fn transpose8rS32(A: & mut [i32], m: usize, n: usize, mut B: & mut [i32],) {
 // Load the array and pack it into x and y.
-    let mut x: u64 = ((A[0] << 24) | (A[m] << 16) | (A[2 * m] << 8) | A[3 * m]) as u64;
-    let mut y: u64 = ((A[4 * m] << 24) | (A[5 * m] << 16) | (A[6 * m] << 8) | A[7 * m]) as u64;
+    let mut x = ((A[0] << 24) | (A[m] << 16) | (A[2 * m] << 8) | A[3 * m]) as u64;
+    let mut y = ((A[4 * m] << 24) | (A[5 * m] << 16) | (A[6 * m] << 8) | A[7 * m]) as u64;
 
     let mut t = (x ^ (x >> 7)) & 0x00AA00AA;
     x = x ^ t ^ (t << 7);
@@ -435,7 +443,7 @@ Why? Just to show that this works.
     5 mask generation
    --
    37 total (recursive method in reverse, using GLS's bit swapping) */
-pub fn transpose8rSr32(A: Vec<i32>, m: usize, n: usize, mut B: Vec<i32>) {
+pub fn transpose8rSr32(A: & mut [i32], m: usize, n: usize, mut B: & mut [i32]) {
 // Load the array and pack it into x and y.
     let mut x: u64 = ((A[0] << 24) | (A[m] << 16) | (A[2 * m] << 8) | A[3 * m]) as u64;
     let mut y: u64 = ((A[4 * m] << 24) | (A[5 * m] << 16) | (A[6 * m] << 8) | A[7 * m]) as u64;
@@ -477,10 +485,8 @@ above except for transpose8b64c:
 8r        38      45           21      36      Basic recursive
 8rS       26      37           18      32      Above with GLS bit swapping
 8rSr              37                   32      8rS in reverse order
-*/
-
-/* Below is the original version from Guy Steele. */
-pub fn transpose32a(mut a: Vec<i64>) {
+Below is the original version from Guy Steele. */
+pub fn transpose32a(mut a: & mut [i64]) {
     let mut j = 16;
     let mut m = 0x0000FFFF;
     loop {
@@ -507,7 +513,7 @@ expressions out of sympathy for readers who are not very familiar with
 C. Also modified to use k + j rather than k | j, because + seems more
 natural for this program.  None of these changes affects the number of
 instructions executed. */
-pub fn transpose32b(mut A: Vec<i32>) {
+pub fn transpose32b(mut A: & mut [i32]) {
     let mut m = 0x0000FFFF;
     let mut j = 16;
     loop {
@@ -545,7 +551,7 @@ macro_rules! swap {
     }
 }
 
-pub fn transpose32c(mut A: Vec<i32>, mut B: Vec<i32>) {
+pub fn transpose32c(mut A: & mut [i32], mut B: & mut [i32]) {
     let mut a0 = A[0];
     let mut a1 = A[1];
     let mut a2 = A[2];
@@ -703,7 +709,7 @@ pub fn transpose32c(mut A: Vec<i32>, mut B: Vec<i32>) {
 method.  The code below takes 1280 ops to do the bit rearrangements
 (i.e., not counting loop control, loads, stores, and indexing).  Not
 competitive with the other methods.  */
-pub fn transpose32d(mut a: Vec<i32>) {
+pub fn transpose32d(mut a: & mut [i32]) {
     for k in 0..32 { a[k] = rotateright!(a[k], k); }
     let mut j = 16;
     let mut m: u64 = 0xFFFF0000;
@@ -730,4 +736,13 @@ pub fn transpose32d(mut a: Vec<i32>) {
         a[k] = a[31 - k];
         a[31 - k] = t;
     }
+}
+
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
+fn test_transpose(){
+    let mut a = ['\x00';50];
+    let mut b = ['\x00';50];
+    let c = ['\x00';50];
+    assert_eq!(transpose8b64c(a.borrow_mut(),1,1,b.borrow_mut()),c);
 }

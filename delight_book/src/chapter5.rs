@@ -1,6 +1,14 @@
 use c8;
 use rand::Rng;
-use std::borrow::Borrow;
+use rand::SeedableRng;
+use rand_core::RngCore;
+use rand_isaac::IsaacRng;
+#[cfg(target_arch = "x86_64")]
+use std::{borrow::{Borrow,BorrowMut}, sync::atomic::{Ordering,AtomicUsize}};
+#[cfg(target_arch = "riscv64")]
+use core::{borrow::{Borrow,BorrowMut}, sync::atomic::{Ordering,AtomicUsize}};
+
+static SEED: AtomicUsize = AtomicUsize::new(0);
 
 pub fn counts_divide_and_conquer(mut x: i32) -> i32 {
     x = (x & 0x55555555) + ((x >> 1) & 0x55555555);
@@ -11,7 +19,8 @@ pub fn counts_divide_and_conquer(mut x: i32) -> i32 {
     x
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_counts() {
     assert_eq!(counts_divide_and_conquer(1), 1);
     assert_eq!(counts_divide_and_conquer(2), 1);
@@ -31,7 +40,6 @@ pub fn counts_pop(mut x: i64) -> i64 {
 
 pub fn counts_rotatel(mut x: u32, n: u32) -> u32 {
     if n > 63 {
-        println!("rotatel, n out of range.\n");
         ()
     }
     return (x.wrapping_shl(n)) | (x.wrapping_shr(32 - n));
@@ -110,7 +118,7 @@ pub fn counts_pop5a(mut x: i64) -> i64 {
 
 pub fn counts_pop6(mut x: i64) -> i64 {
     // Table lookup.
-    let table: Vec<char> = vec![
+    let table = [
         0 as char, 1 as char, 1 as char, 2 as char, 1 as char, 2 as char, 2 as char, 3 as char, 1 as char, 2 as char, 2 as char, 3 as char, 2 as char, 3 as char, 3 as char, 4 as char,
         1 as char, 2 as char, 2 as char, 3 as char, 2 as char, 3 as char, 3 as char, 4 as char, 2 as char, 3 as char, 3 as char, 4 as char, 3 as char, 4 as char, 4 as char, 5 as char,
         1 as char, 2 as char, 2 as char, 3 as char, 2 as char, 3 as char, 3 as char, 4 as char, 2 as char, 3 as char, 3 as char, 4 as char, 3 as char, 4 as char, 4 as char, 5 as char,
@@ -165,7 +173,8 @@ pub fn counts_pop9(mut x: i64) -> i64 {
     return y;
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_counts_pop() {
     assert_eq!(counts_pop(1), 1);
     assert_eq!(counts_pop(2), 1);
@@ -215,7 +224,8 @@ pub fn counts_popDiff(mut x: i32, mut y: i32) -> i32 {
     return (x & 0x0000007F) - 32;
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_counts_popDiff() {
     assert_eq!(counts_popDiff(1, 1), 0);
 }
@@ -243,7 +253,7 @@ fn test_counts_popDiff() {
 ///   +---↓-------↓--+
 ///     eights  fours
 ///
-pub fn counts_popArray1(A: Vec<i32>, n: i32) -> i32 {
+pub fn counts_popArray1(A: & mut [i32], n: i32) -> i32 {
     let mut tot = 0;
     for i in 0..n {
         tot = tot + counts_pop(A[i as usize] as i64);
@@ -265,7 +275,7 @@ ignoring loop control and loads, is 7 elementary ops plus 2 pop counts
 for each 3 array elements, i.e., (7 + 2p)/3 ops per word, where p is the
 number of ops for one population count. For p = 15 (code of Fig. 5-2,
 inlined) this is 37/3 = 12.33 ops per word. */
-pub fn counts_popArray2(A: Vec<i32>, n: i32) -> i32 {
+pub fn counts_popArray2(A: & mut [i32], n: i32) -> i32 {
     let mut tot1 = 0;
     let mut tot2 = 0;
     let mut i: usize = 0;
@@ -295,7 +305,7 @@ array is assumed to have at least one element.
 ops plus 1 pop count for each 2 array elements, i.e., (6 + p)/2 ops per
 word, where p is the number of ops for one population count. For p = 15
 (code of Fig. 5-2, inlined) this is 21/2 = 10.5 ops per word. */
-pub fn counts_popArray3(A: Vec<i32>, n: i32) -> i32 {
+pub fn counts_popArray3(A: & mut [i32], n: i32) -> i32 {
     let mut tot = 0;                     // Initialize.
     let mut ones = 0;
     let mut twos = 0;
@@ -324,7 +334,7 @@ this algorithm. The array is assumed to have at least three elements.
 ops plus 1 pop count for each 4 array elements, i.e., (16 + p)/4 ops per
 word, where p is the number of ops for one population count. For p = 15
 (code of Fig. 5-2, inlined) this is 31/4 = 7.75 ops per word. */
-pub fn counts_popArray4(A: Vec<i32>, n: i32) -> i32 {
+pub fn counts_popArray4(A: & mut [i32], n: i32) -> i32 {
     let mut tot = 0;                     // Initialize.
     let mut twos = 0;
     let mut twosA = 0;
@@ -358,7 +368,7 @@ at least seven elements.
 ops plus 1 pop count for each 8 array elements, i.e., (36 + p)/8 ops per
 word, where p is the number of ops for one population count. For p = 15
 (code of Fig. 5-2, inlined) this is 51/8 = 6.375 ops per word. */
-pub fn counts_popArray5(A: Vec<i32>, n: i32) -> i32 {
+pub fn counts_popArray5(A: & mut [i32], n: i32) -> i32 {
     let mut ones = 0;
     let mut twos = 0;
     let mut twosA = 0;
@@ -411,20 +421,16 @@ times and so isn't so important.
 must be greatly reduced. It may be possible to do this by "unwinding"
 the first few inner loop iterations. Not sure how good the result would
 be. */
-pub fn counts_popArray6(A: Vec<i32>, n: i32) -> i32 {
+pub fn counts_popArray6(A: &mut [i32], n: i32) -> i32 {
     let mut tot = 0;
     let mut i: usize = 0;
     let mut k = 0;
     let mut z = 0;
     let mut hi = 0;
     let mut lo = 0;
-    let mut nrow = Vec::with_capacity(30);
-    let mut sum = Vec::with_capacity(30);
+    let mut nrow = [0; 30];
+    let mut sum = [[0, 0]; 30];
 
-    for t in 0..30 {
-        nrow.push(0);
-        sum.push(vec![0, 0]);
-    }
     nrow[0] = 1;                 // a fake 0-element.
 
     loop {
@@ -477,23 +483,24 @@ pub fn counts_popArray6(A: Vec<i32>, n: i32) -> i32 {
     return tot as i32;
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 #[allow(overflowing_literals)]
 fn test_counts_popArray6() {
-    let mut A: Vec<i32> = Vec::with_capacity(101);
-    let mut A1: Vec<i64> = Vec::with_capacity(101);
-    A.push(0xFFFFFFFF);
-    A1.push(0xFFFFFFFF);
-    A.push(5);
-    A1.push(5);
+    let mut A = [0;101];
+    let mut A1 = [0;101];
+    A[0]=0xFFFFFFFF;
+    A1[0]=0xFFFFFFFF;
+    A[1]=5;
+    A1[1]=5;
     for i in 2..101 {
-        let result = rand::thread_rng().gen();
-        A.push(result);
-        A1.push(result as i64);
+        let result = counts_gen_i32();
+        A[i]=result;
+        A1[i]=result as i64;
     }
 
-    let s1 = counts_pop_array(A1, 101);
-    assert_eq!(counts_popArray1(A.clone(), 101), s1 as i32);
+    let s1 = counts_pop_array(A1.borrow_mut(), 101);
+    assert_eq!(counts_popArray1(A.borrow_mut(), 101), s1 as i32);
     // assert_eq!(counts_popArray2(A.clone(),101) , s1 as i32);
     // assert_eq!(counts_popArray3(A.clone(),101) , s1 as i32);
     // assert_eq!(counts_popArray4(A.clone(),101) , s1 as i32);
@@ -501,11 +508,14 @@ fn test_counts_popArray6() {
     // assert_eq!(counts_popArray6(A,101), s1 as i32);
 }
 
-pub fn counts_pop_array(A: Vec<i64>, n: i64) -> i64 {
+pub fn counts_pop_array(A: & mut [i64], n: i64) -> i64 {
     let mut s = 0;
     let mut x;
     for i in (0..n).step_by(31) {
-        let lim = std::cmp::min(n, i + 31);
+        #[cfg(target_arch = "riscv64")]
+            let lim = core::cmp::min(n, i + 31);
+        #[cfg(target_arch = "x86_64")]
+            let lim = std::cmp::min(n, i + 31);
         let mut s8 = 0;
         for j in i..lim {
             x = A[j as usize];
@@ -521,9 +531,10 @@ pub fn counts_pop_array(A: Vec<i64>, n: i64) -> i64 {
     return s;
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_counts_pop_aray() {
-    assert_eq!(counts_pop_array(vec![1, 2], 1), 1);
+    assert_eq!(counts_pop_array([1, 2].borrow_mut(), 1), 1);
 }
 
 pub fn counts_popCmpr(mut xp: i32, mut yp: i32) -> i32 {
@@ -537,7 +548,8 @@ pub fn counts_popCmpr(mut xp: i32, mut yp: i32) -> i32 {
     }
 }
 
-#[test]
+#[cfg_attr(not(target_arch = "x86_64"),test_case)]
+#[cfg_attr(not(target_arch = "riscv64"),test)]
 fn test_counts_popCmpr() {
     assert_eq!(counts_popCmpr(0, 1), -1);
 }
@@ -579,15 +591,58 @@ pub fn counts_popCmprAvgSim() -> f32 {
     let mut tot = 0;
 
     for i in 0..ntrials {
-        let xp:i32 = rand::thread_rng().gen::<i32>() & mask;
-        let yp:i32 = rand::thread_rng().gen::<i32>() & mask;
+        let xp: i32 = counts_gen_i32() & mask;
+        let yp: i32 = counts_gen_i32() & mask;
         let x = xp & !yp;
         let y = yp & !xp;
         let nbx = counts_pop(x as i64);
         let nby = counts_pop(y as i64);
         let mut nb = 0;
-        if nbx < nby { nb = nbx  } else { nb = nby };
+        if nbx < nby { nb = nbx } else { nb = nby };
         tot = tot + nb;
     }
     tot as f32 / ntrials as f32
+}
+
+pub fn counts_parity1(mut x: u32) -> u32 {
+    let mut y = x ^ (x >> 1);
+    y = y ^ (y >> 2);
+    y = y ^ (y >> 4);
+    y = y ^ (y >> 8);
+    y = y ^ (y >> 16);
+    return y & 1;
+}
+
+pub fn counts_parity1a(mut x: u32) -> u32 {
+    let mut y = x ^ (x >> 16);
+    y = y ^ (y >> 8);
+    y = y ^ (y >> 4);
+    y = 0x6996 >> (y & 0xF);     // Falk Hueffner's trick.
+    return y & 1;
+}
+
+pub fn counts_parity2(mut x: u32) -> u32 {
+    x = x ^ (x >> 1);
+    x = (x ^ (x >> 2)) & 0x11111111;
+    x = x * 0x11111111;
+    let p = (x >> 28) & 1;
+    return p;
+}
+
+#[allow(overflowing_literals)]
+pub fn counts_parity3(mut x: i32) -> i32 {
+    let y = (x.wrapping_mul(0x10204081)) & 0x888888FF;
+    return (y % 1920) & 0xFF;      // Returns a byte with even parity.
+}
+
+pub fn counts_parity4(mut x: u32) -> u32 {
+    let mut y = (x * 0x00204081) | 0x3DB6DB00;
+    y = (y % 1152) & 0xFF;
+    return y ^ 0x80;             // Change to even parity so test2 can be used.
+}
+
+pub fn counts_gen_i32() -> i32 {
+    IsaacRng::gen::<i32>(&mut IsaacRng::seed_from_u64(IsaacRng::next_u64(
+        &mut IsaacRng::seed_from_u64(SEED.fetch_add(1, Ordering::Relaxed) as u64),
+    )))
 }

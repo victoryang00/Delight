@@ -5,7 +5,9 @@ authors = ["victoryang00 <yangyiwei2000@gmail.com>"]
 
 [dependencies]
 libc = "^0"
-rand = "^0"
+rand = { version = "^0",default-features = false}
+rand_core = { version = "^0", default-features = false }
+rand_isaac = { version = "^0", default-features = false }
 
 [profile.dev]
 panic = "abort"
