@@ -126,7 +126,7 @@ impl<'a, R: Register, M: Memory<REG=R>, Inner: SupportMachine<REG=R, MEM=M>> PPr
         self.machine.load_program(program, args)
     }
     pub fn run(&mut self) -> Result<i8, Error> {
-        let decoder = build_decoder::<Inner::REG>(self.isa());
+        let mut decoder = build_decoder::<Inner::REG>(self.isa());
         self.machine.set_running(true);
         while self.machine.running() {
             self.pprof_logger.on_step(&mut self.machine);
@@ -264,7 +264,7 @@ fn sprint_fun(
 impl<'a, R: Register, M: Memory<REG = R>, Inner: ckb_vm::machine::SupportMachine<REG = R, MEM = M>> PProfLogger<ckb_vm::machine::DefaultMachine<'a, Inner>> for PProfLogger_eval {
     fn on_step(&mut self, machine: &mut ckb_vm::machine::DefaultMachine<'a, Inner>) {
         let pc = machine.pc().to_u64();
-        let decoder = ckb_vm::decoder::build_decoder::<R>(machine.isa());
+        let mut decoder = ckb_vm::decoder::build_decoder::<R>(machine.isa());
         let inst = decoder.decode(machine.memory_mut(), pc).unwrap();
         let opcode = ckb_vm::instructions::extract_opcode(inst);
         let cycles = machine
