@@ -17,6 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: cargo +nightly test --verbose && cargo +nightly bench --verbose && cd ./delight_book/ && cargo +nightly test --no-run && cd ..
+        run: rustup toolchain install nightly && cargo +nightly test --verbose && cargo +nightly bench --verbose && cd ./delight_book/ && cargo +nightly test --no-run && cd ..
       - name: Run tests
         run: cargo +nightly run --verbose --no-run
