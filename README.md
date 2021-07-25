@@ -1,4 +1,5 @@
 # Hacker's Delight. The book examples on the Rust language.
+![example workflow](https://github.com/victoryang00/Delight/actions/workflows/rust.yml/badge.svg)
 
 Try to implement all the function in Hacker's Delight and make them runnable in [ckb_vm](https://github.com/nervosnetwork/ckb-vm).
 
