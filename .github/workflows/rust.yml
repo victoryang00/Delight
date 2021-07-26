@@ -17,6 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build
-        run: rustup toolchain install nightly && cargo +nightly test --verbose && cd ./delight_book/ && cargo +nightly test --no-run && cd ..
+        run: rustup toolchain install nightly && rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu && cargo +nightly test --verbose && cd ./delight_book/ && cargo +nightly test --no-run && cd ..
       - name: Run tests
         run: cargo +nightly run --verbose --no-run
